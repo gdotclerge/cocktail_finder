@@ -2,10 +2,6 @@ require 'rest-client'
 require 'json'
 require 'pry'
 
-Drink.destroy_all
-Ingredient.destroy_all
-Measurement.destroy_all
-
 alchoholic_hash = JSON.parse(RestClient.get('http://www.thecocktaildb.com/api/json/v1/1/filter.php?a=Alcoholic'))
 
 iddrink_array = alchoholic_hash["drinks"].map {
@@ -33,7 +29,7 @@ instruction_array = drink_hash_array.map {
 
 # binding.pry
 
-drink_hash_array.each {
+drink_hash_array.each do
   |drink|
   new_drink = Drink.create(name: drink["strDrink"])
   i = 1
@@ -48,9 +44,12 @@ drink_hash_array.each {
       new_ingredient = Ingredient.create(name: drink["strIngredient#{i}"])
       new_drink.ingredients << new_ingredient
       end
-      new_measurement = Measurement.create(measurement: drink["strMeasure#{i}"])
-      new_ingredient.measurements << new_measurement
+      new_amount = Measurement.find_by(drink_id: new_drink.id, ingredient_id: new_ingredient.id)
+      new_amount.amount = drink["strMeasure#{i}"]
+      new_amount.save
+      new_drink.recipe = drink["strInstructions"]
+      new_drink.save
       i += 1
     end
   end
-  }
+end
